@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rectangle Area dApp - BC210504017</title>
+
+  <!-- Ethers.js (v6) -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.0/dist/ethers.umd.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 900px;
+      background: #020617;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid #1e293b;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #f9fafb;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #1f2937;
+      border: 1px solid #4b5563;
+      font-size: 0.75rem;
+      gap: 6px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: 24px;
+      margin-top: 16px;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #1f2937 0, #020617 55%);
+      border-radius: 14px;
+      padding: 16px 18px 18px;
+      border: 1px solid #111827;
+    }
+
+    .card h2 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+      color: #e5e7eb;
+    }
+
+    .card p {
+      margin: 0 0 12px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-size: 0.85rem;
+      min-width: 50px;
+    }
+
+    input[type="number"] {
+      background: #020617;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      padding: 6px 10px;
+      color: #e5e7eb;
+      outline: none;
+      font-size: 0.85rem;
+      width: 90px;
+    }
+
+    input[type="number"]:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.6);
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+      white-space: nowrap;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: none;
+    }
+
+    .btn-connect {
+      background: linear-gradient(90deg, #22c55e, #22d3ee);
+      color: #022c22;
+      font-weight: 600;
+      padding: 7px 14px;
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-primary {
+      background: #0ea5e9;
+      color: #0b1120;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+    }
+
+    .btn-secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #1f2937;
+    }
+
+    .status {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+
+    .status span {
+      font-weight: 500;
+      color: #e5e7eb;
+    }
+
+    .status.ok span {
+      color: #22c55e;
+    }
+
+    .status.error span {
+      color: #f97316;
+    }
+
+    .preview-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .preview-values {
+      font-size: 0.8rem;
+      color: #e5e7eb;
+    }
+
+    .preview-box {
+      background: radial-gradient(circle at top, #1e293b 0, #020617 60%);
+      border-radius: 12px;
+      border: 1px solid #0f172a;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 230px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rect {
+      background: linear-gradient(135deg, #38bdf8, #22c55e);
+      border-radius: 6px;
+      box-shadow:
+        0 0 18px rgba(56, 189, 248, 0.4),
+        0 0 32px rgba(34, 197, 94, 0.35);
+      transition: width 0.2s ease, height 0.2s ease, transform 0.2s ease;
+      transform-origin: center center;
+    }
+
+    .area-output {
+      font-size: 0.9rem;
+      color: #e5e7eb;
+      margin-top: 8px;
+    }
+
+    .area-output span {
+      color: #22c55e;
+      font-weight: 600;
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    @media (max-width: 750px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div>
+        <div class="title">Rectangle Area dApp</div>
+        <div class="subtitle">BC210504017 • Sepolia • Ethers.js + MetaMask</div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+        <button id="connectButton" class="btn-connect">
+          <span>Connect Wallet</span>
+        </button>
+        <div id="walletStatus" class="status">
+          Wallet: <span>Not connected</span>
+        </div>
+      </div>
+    </div>
+
+    <span class="badge">
+      <span class="badge-dot"></span>
+      On-chain Rectangle Storage
+    </span>
+
+    <div class="grid">
+      <!-- Left: Form & Blockchain Actions -->
+      <div class="card">
+        <h2>Rectangle Controls</h2>
+        <p>
+          Genişlik ve yükseklik değerlerini gir, hem dikdörtgen önizlemesini değiştir hem de
+          Sepolia üzerindeki smart contract'a kaydet.
+        </p>
+
+        <div class="row">
+          <label for="widthInput">Width</label>
+          <input id="widthInput" type="number" min="1" placeholder="ex: 4" />
+          <button id="setWidthButton" class="btn-secondary">
+            Set Width 210504017
+        </button>
+        </div>
+
+        <div class="row">
+          <label for="heightInput">Height</label>
+          <input id="heightInput" type="number" min="1" placeholder="ex: 3" />
+          <button id="setHeightButton" class="btn-secondary">
+            Set Height 210504017
+          </button>
+        </div>
+
+        <div class="row" style="margin-top: 10px;">
+        <button id="areaButton" class="btn-primary">
+            Area 210504017
+        </button>
+          <span id="loadingText" class="status" style="margin:0; display:none;">
+            <span>Processing transaction…</span>
+          </span>
+        </div>
+
+        <div id="areaResult" class="area-output">
+          Area: <span>–</span>
+        </div>
+
+        <div id="message" class="status" style="margin-top:10px;">
+          <span>Ready.</span>
+        </div>
+
+        <div class="note">
+          Not: Width/Height değerlerini girince dikdörtgen önizlemesi hemen değişir,
+          butonlara bastığında blockchain tarafına da yazılır.
+        </div>
+      </div>
+
+      <!-- Right: Dynamic Rectangle Preview -->
+      <div class="card">
+        <h2>Dynamic Rectangle Preview</h2>
+        <p>Bu alan sadece ön yüz simülasyonudur. Gerçek değerler kontratta saklanır.</p>
+
+        <div class="preview-wrapper">
+          <div class="preview-header">
+            <div>Visual Ratio</div>
+            <div class="preview-values">
+              <span id="previewValues">W: –, H: –</span>
+            </div>
+          </div>
+
+          <div class="preview-box">
+            <div id="rect" class="rect"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      💡 Ödev için: Bu sayfanın URL’sini GitHub Pages üzerinden yayınlayıp,
+      Word dosyasındaki turkuaz alanlara ekran görüntülerini ekleyebilirsin.
+    </div>
+  </div>
+
+  <script>
+    // ---------------------------
+    // 1) Burayı KENDİ KONTRATINA GÖRE DÜZENLE
+    // ---------------------------
+
+    // 🟢 1. Kontrat adresini kendi Sepolia kontrat adresinle değiştir:
+    const CONTRACT_ADDRESS = "0x5b18873B3c4EAc69D7824d05fd2E48F9a92291F0";
+
+    // 🟢 2. ABI: Remix'ten aldığın JSON (senin gönderdiğin):
+    const ABI = [
+        {
+        "anonymous": false,
+        "inputs": [
+            {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "newHeight",
+            "type": "uint256"
+            },
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "updatedBy",
+            "type": "address"
+            }
+        ],
+        "name": "HeightUpdated",
+        "type": "event"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "uint256",
+            "name": "h",
+            "type": "uint256"
+            }
+        ],
+        "name": "setHeight",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "uint256",
+            "name": "w",
+            "type": "uint256"
+            }
+        ],
+        "name": "setWidth",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+        },
+        {
+        "anonymous": false,
+        "inputs": [
+            {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "newWidth",
+            "type": "uint256"
+            },
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "updatedBy",
+            "type": "address"
+            }
+        ],
+        "name": "WidthUpdated",
+        "type": "event"
+        },
+        {
+        "inputs": [],
+        "name": "area",
+        "outputs": [
+            {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [],
+        "name": "bothSet",
+        "outputs": [
+            {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [],
+        "name": "getHeight",
+        "outputs": [
+            {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [],
+        "name": "getWidth",
+        "outputs": [
+            {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [],
+        "name": "lastUpdatedBy",
+        "outputs": [
+            {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [],
+        "name": "updateCount",
+        "outputs": [
+            {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        }
+    ];
+
+    // Ethers.js değişkenleri
+    let provider;
+    let signer;
+    let contract;
+
+    // UI elementleri
+    const connectButton = document.getElementById("connectButton");
+    const walletStatus = document.getElementById("walletStatus");
+    const messageBox = document.getElementById("message");
+    const loadingText = document.getElementById("loadingText");
+    const areaResult = document.getElementById("areaResult").querySelector("span");
+
+    const widthInput = document.getElementById("widthInput");
+    const heightInput = document.getElementById("heightInput");
+    const setWidthButton = document.getElementById("setWidthButton");
+    const setHeightButton = document.getElementById("setHeightButton");
+    const areaButton = document.getElementById("areaButton");
+
+    const rect = document.getElementById("rect");
+    const previewValues = document.getElementById("previewValues");
+
+    // ---------------------------
+    // 2) Yardımcı fonksiyonlar (UI)
+    // ---------------------------
+    function setMessage(text, type = "normal") {
+      messageBox.classList.remove("ok", "error");
+      if (type === "ok") messageBox.classList.add("ok");
+      if (type === "error") messageBox.classList.add("error");
+      messageBox.innerHTML = `<span>${text}</span>`;
+    }
+
+    function setWalletStatus(text, ok = false) {
+      walletStatus.classList.remove("ok");
+      if (ok) walletStatus.classList.add("ok");
+      walletStatus.innerHTML = `Wallet: <span>${text}</span>`;
+    }
+
+    function setLoading(isLoading) {
+      loadingText.style.display = isLoading ? "inline-block" : "none";
+    }
+
+    // ---------------------------
+    // 3) Dinamik Dikdörtgen Önizlemesi
+    // ---------------------------
+    function updateRectanglePreview() {
+      const w = parseFloat(widthInput.value);
+      const h = parseFloat(heightInput.value);
+
+      if (!w || !h || w <= 0 || h <= 0) {
+        rect.style.width = "80px";
+        rect.style.height = "60px";
+        rect.style.transform = "scale(1)";
+        previewValues.textContent = "W: –, H: –";
+        return;
+      }
+
+      // Oran korumalı, maksimum 200x200'lük alan içinde tut
+      const maxSide = Math.max(w, h);
+      const maxPixels = 200;
+
+      const widthPx = (w / maxSide) * maxPixels;
+      const heightPx = (h / maxSide) * maxPixels;
+
+      rect.style.width = `${Math.max(widthPx, 8)}px`;
+      rect.style.height = `${Math.max(heightPx, 8)}px`;
+
+      // hafif zoom efekti
+      rect.style.transform = "scale(1.05)";
+
+      previewValues.textContent = `W: ${w}, H: ${h}`;
+    }
+
+    widthInput.addEventListener("input", updateRectanglePreview);
+    heightInput.addEventListener("input", updateRectanglePreview);
+
+    // Sayfa ilk açıldığında varsayılan dikdörtgen
+    updateRectanglePreview();
+
+    // ---------------------------
+    // 4) Cüzdan Bağlama
+    // ---------------------------
+    connectButton.onclick = async () => {
+      if (typeof window.ethereum === "undefined") {
+        alert("Lütfen MetaMask kur.");
+        setWalletStatus("MetaMask not found", false);
+        return;
+      }
+
+      try {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+
+        const address = await signer.getAddress();
+        setWalletStatus(address.slice(0, 6) + "..." + address.slice(-4), true);
+        setMessage("Wallet connected.", "ok");
+
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      } catch (err) {
+        console.error(err);
+        setMessage("Wallet connection failed.", "error");
+      }
+    };
+
+    // ---------------------------
+    // 5) Width Set
+    // ---------------------------
+    setWidthButton.onclick = async () => {
+      if (!contract) {
+        setMessage("Önce wallet bağla.", "error");
+        return;
+      }
+
+      const w = parseInt(widthInput.value);
+      if (!w || w <= 0) {
+        setMessage("Lütfen 0'dan büyük bir width gir.", "error");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setMessage("setWidth işlemi gönderiliyor…");
+        const tx = await contract.setWidth(w);
+        await tx.wait();
+        setLoading(false);
+        setMessage("Width başarılı bir şekilde güncellendi.", "ok");
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+        setMessage("setWidth hata: " + (err?.reason || err?.message || "Unknown error"), "error");
+      }
+    };
+
+    // ---------------------------
+    // 6) Height Set
+    // ---------------------------
+    setHeightButton.onclick = async () => {
+      if (!contract) {
+        setMessage("Önce wallet bağla.", "error");
+        return;
+      }
+
+      const h = parseInt(heightInput.value);
+      if (!h || h <= 0) {
+        setMessage("Lütfen 0'dan büyük bir height gir.", "error");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setMessage("setHeight işlemi gönderiliyor…");
+        const tx = await contract.setHeight(h);
+        await tx.wait();
+        setLoading(false);
+        setMessage("Height başarılı bir şekilde güncellendi.", "ok");
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+        setMessage("setHeight hata: " + (err?.reason || err?.message || "Unknown error"), "error");
+      }
+    };
+
+    // ---------------------------
+    // 7) Area Hesaplama
+    // ---------------------------
+    areaButton.onclick = async () => {
+      if (!contract) {
+        setMessage("Önce wallet bağla.", "error");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setMessage("area() fonksiyonu çağrılıyor…");
+        const a = await contract.area();
+        setLoading(false);
+
+        areaResult.textContent = a.toString();
+        setMessage("Alan başarıyla okundu.", "ok");
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+        setMessage("area() hata: " + (err?.reason || err?.message || "Unknown error"), "error");
+      }
+    };
+  </script>
+</body>
+</html>
